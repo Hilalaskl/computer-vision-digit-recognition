@@ -3,93 +3,32 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+import os
 
-# 1. MNIST veri setini yükle
-print("MNIST veri seti yükleniyor...")
+# 1. Kaydedilmiş modeli yükle
+MODEL_PATH = "digit_recognition.keras"
 
-(x_train, y_train), (x_test, y_test) = (
-    tf.keras.datasets.mnist.load_data()
-)
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(
+        "Model bulunamadı! Önce python train_model.py çalıştır."
+    )
 
-# 2. Görüntüleri 0-1 aralığına dönüştür
-x_train = x_train.astype("float32") / 255.0
-x_test = x_test.astype("float32") / 255.0
+print("Kaydedilmiş model yükleniyor...")
+model = tf.keras.models.load_model(MODEL_PATH)
+print("Model başarıyla yüklendi.")
 
-# 3. Yapay sinir ağı modelini oluştur
-model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(28, 28)),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(128, activation="relu"),
-    tf.keras.layers.Dense(64, activation="relu"),
-    tf.keras.layers.Dense(10, activation="softmax")
-])
-
-# 4. Modeli derle
-model.compile(
-    optimizer="adam",
-    loss="sparse_categorical_crossentropy",
-    metrics=["accuracy"]
-)
-
-# 5. Modeli eğit
-print("Model eğitimi başlıyor...")
-
-model.fit(
-    x_train,
-    y_train,
-    epochs=5,
-    batch_size=128,
-    validation_split=0.1
-)
-
-# 6. Test verileriyle değerlendir
-test_loss, test_accuracy = model.evaluate(
-    x_test, y_test, verbose=0
-)
-
-print(f"\nTest doğruluğu: {test_accuracy * 100:.2f}%")
-
-# 7. Test veri setinden bir örnek rakamı tahmin et
-index = 0
-digit = x_test[index].reshape(1, 28, 28)
-
-prediction = model.predict(digit, verbose=0)
-predicted_digit = np.argmax(prediction)
-
-print("\nTest görüntüsündeki gerçek rakam:", y_test[index])
-print("Tahmin edilen rakam:", predicted_digit)
-
-probabilities = prediction[0]
-top3 = np.argsort(probabilities)[-3:][::-1]
-
-print("En güçlü 3 tahmin:")
-for number in top3:
-    print(f"  {number}: %{probabilities[number] * 100:.2f}")
-
-plt.imshow(x_test[index], cmap="gray")
-plt.title(f"Tahmin: {predicted_digit}")
-plt.axis("off")
-plt.show()
-
-# 8. Eğitilmiş modeli kaydet
-model.save("digit_recognition.keras")
-print("Model digit_recognition.keras dosyasına kaydedildi.")
-
-
-# 9. Kendi fotoğrafımızdaki rakamları tanı
-print("\nFotoğraftaki rakamlar tanınıyor...")
-
-image = cv2.imread("13.jpg")
+# 2. Fotoğrafı yükle
+IMAGE_PATH = "13.jpg"
+image = cv2.imread(IMAGE_PATH)
 
 if image is None:
     raise FileNotFoundError(
-        "13.jpg bulunamadi! Fotograf proje klasorunde olmali."
+        "13.jpg bulunamadı! Fotoğraf proje klasöründe olmalı."
     )
 
-# Görüntüyü gri tonlamaya çevir
+# 3. Görüntüyü işle
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# Fotoğraftaki rakamların bulunduğu bölgeyi al
 h, w = gray.shape
 
 roi = gray[
@@ -98,9 +37,8 @@ roi = gray[
 ]
 
 if roi.size == 0:
-    raise ValueError("Fotoğraftan alınan bölge boş. Fotoğrafı kontrol et.")
+    raise ValueError("Fotoğraftan alınan bölge boş.")
 
-# Koyu kalem izlerini beyaz, arka planı siyah yap
 blur = cv2.GaussianBlur(roi, (5, 5), 0)
 
 _, binary = cv2.threshold(
@@ -110,7 +48,7 @@ _, binary = cv2.threshold(
     cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU
 )
 
-# Rakamların sınırlarını bul
+# 4. Rakamların sınırlarını bul
 contours, _ = cv2.findContours(
     binary,
     cv2.RETR_EXTERNAL,
@@ -123,22 +61,17 @@ for contour in contours:
     x, y, bw, bh = cv2.boundingRect(contour)
     area = cv2.contourArea(contour)
 
-    # Küçük lekeleri ele
     if area > 1000 and bw > 30 and bh > 100:
         boxes.append((x, y, bw, bh))
 
-# Rakamları soldan sağa sırala
 boxes.sort(key=lambda box: box[0])
 
 
-
-# 10. Rakamı MNIST formatına dönüştür
+# 5. Rakamı 28x28 MNIST formatına dönüştür
 def prepare_digit(binary_image, box):
     x, y, w, h = box
     digit = binary_image[y:y + h, x:x + w].copy()
 
-
-    # Rakamın etrafındaki boşluğu azalt
     coords = cv2.findNonZero(digit)
 
     if coords is not None:
@@ -147,7 +80,6 @@ def prepare_digit(binary_image, box):
 
     h, w = digit.shape
 
-    # Oranı bozmadan 20x20 alana sığdır
     scale = 20.0 / max(h, w)
     new_w = max(1, int(w * scale))
     new_h = max(1, int(h * scale))
@@ -158,7 +90,6 @@ def prepare_digit(binary_image, box):
         interpolation=cv2.INTER_AREA
     )
 
-    # 28x28 siyah tuval üzerinde ortala
     canvas = np.zeros((28, 28), dtype=np.uint8)
 
     x_offset = (28 - new_w) // 2
@@ -172,14 +103,9 @@ def prepare_digit(binary_image, box):
     return canvas.astype("float32") / 255.0
 
 
-
-
-# 11. Fotoğraftaki rakamları tahmin et
+# 6. Rakamları tahmin et
 if len(boxes) == 0:
-    print(
-        "Rakamlar bulunamadi. Fotoğrafın konumunu "
-        "ve rakam filtrelerini kontrol et."
-    )
+    print("Rakam bulunamadı. Fotoğrafı veya görüntü işleme ayarlarını kontrol et.")
 
 else:
     result = ""
@@ -187,23 +113,23 @@ else:
     for box in boxes:
         digit = prepare_digit(binary, box)
 
-        # Modele verilecek rakamı göster
+        # Modele verilen görüntüyü göster
         plt.figure(figsize=(3, 3))
         plt.imshow(digit, cmap="gray", vmin=0, vmax=1)
         plt.title("Modele verilen rakam")
         plt.axis("off")
         plt.show()
 
-        digit = digit.reshape(1, 28, 28)
+        prediction = model.predict(
+            digit.reshape(1, 28, 28),
+            verbose=0
+        )
 
-        prediction = model.predict(digit, verbose=0)
-        predicted_digit = np.argmax(prediction)
-
-        print("\nTahmin edilen rakam:", predicted_digit)
-
+        predicted_digit = int(np.argmax(prediction))
         probabilities = prediction[0]
         top3 = np.argsort(probabilities)[-3:][::-1]
 
+        print("\nTahmin edilen rakam:", predicted_digit)
         print("En güçlü 3 tahmin:")
 
         for number in top3:
@@ -216,7 +142,7 @@ else:
 
     print("\nOkunan sayi:", result)
 
-# 12. Görüntüleri göster
+# 7. Orijinal ve işlenmiş görüntüyü göster
 plt.figure(figsize=(10, 4))
 
 plt.subplot(1, 2, 1)
