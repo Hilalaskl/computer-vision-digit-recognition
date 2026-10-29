@@ -78,6 +78,65 @@ The program trains the model, evaluates its accuracy, displays predictions, and 
 - Improve image preprocessing and digit segmentation
 - Separate model training from image prediction
 
+## Model Performance
+
+The model was evaluated on the MNIST test dataset.
+
+- **Test Accuracy:** 97.32%
+- **Model Architecture:** Fully connected neural network
+- **Hidden Layers:** 128 and 64 neurons
+- **Activation Functions:** ReLU for hidden layers and Softmax for output
+- **Training Epochs:** 5
+
+The confusion matrix is available in `confusion_matrix.png`.
+
+## How to Run
+
+### Requirements
+
+- Python 3
+- TensorFlow
+- NumPy
+- Pandas
+- Matplotlib
+- scikit-learn
+- OpenCV
+
+### 1. Install dependencies
+
+```bash
+pip install tensorflow numpy pandas matplotlib scikit-learn opencv-python
+```
+
+### 2. Train the model
+
+```bash
+python train_model.py
+```
+
+This command trains the neural network, evaluates its performance, generates the confusion matrix, and saves the trained model.
+
+### 3. Run digit recognition
+
+Place an image containing handwritten digits in the project directory and update the image path in `main.py` if necessary.
+
+```bash
+python main.py
+```
+
+The program processes the image and predicts the handwritten digits.
+
+## Technologies Used
+
+- Python
+- TensorFlow / Keras
+- OpenCV
+- NumPy
+- Pandas
+- Matplotlib
+- scikit-learn
+
+
 ## Author
 
 **Hilal Askl**
