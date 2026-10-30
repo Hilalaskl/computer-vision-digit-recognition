@@ -2,7 +2,7 @@
 
 A computer vision project that recognizes handwritten digits using Python, TensorFlow/Keras, and OpenCV.
 
-The project uses a neural network trained on the MNIST dataset to classify handwritten digits from 0 to 9. It also processes a custom image containing handwritten digits and predicts each digit individually.
+The project uses a neural network trained on the MNIST dataset to classify handwritten digits from 0 to 9. It also processes custom images, detects individual digits, and predicts them with confidence scores. The system supports recognizing both handwritten numbers and digits arranged in a matrix.
 
 ## Features
 
@@ -10,8 +10,11 @@ The project uses a neural network trained on the MNIST dataset to classify handw
 - Build and train a neural network
 - Evaluate model performance on test data
 - Generate a confusion matrix
-- Recognize handwritten digits from a custom image
+- Recognize handwritten digits from custom images
+- Detect and segment individual digits using OpenCV
 - Display the top three predictions with confidence scores
+- Recognize multiple digits arranged in rows and columns
+- Display recognized digits as a matrix
 - Save and load the trained model in Keras format
 
 ## Technologies Used
@@ -43,6 +46,20 @@ The model uses the Adam optimizer and sparse categorical cross-entropy loss.
 
 The model successfully recognized the handwritten number `13` in a custom image.
 
+The project was also tested with a handwritten 3×3 matrix. All nine digits were correctly recognized.
+
+**Matrix recognition example:**
+
+![3x3 Matrix](matris.jpg)
+
+**Recognized matrix:**
+
+```text
+1   2   4
+5   6   7
+8   9   3
+```
+
 The confusion matrix generated during model evaluation is available in `confusion_matrix.png`.
 
 ## Project Structure
@@ -54,6 +71,7 @@ computer-vision-digit-recognition/
 ├── README.md
 ├── .gitignore
 ├── 13.jpg
+├── matris.jpg
 └── confusion_matrix.png
 ```
 
@@ -79,13 +97,15 @@ This script trains the neural network, evaluates its performance, generates the 
 
 ### 2. Run digit recognition
 
-Make sure `13.jpg` and `digit_recognition.keras` are in the project directory.
+Make sure the input image and `digit_recognition.keras` are in the project directory.
+
+Set the desired image path in `main.py`, then run:
 
 ```bash
 python main.py
 ```
 
-The program processes the input image, segments the digits, and predicts each digit with confidence scores.
+The program processes the input image, segments individual digits, and predicts each digit with confidence scores. For matrix images, the recognized digits are arranged and displayed in row and column order.
 
 ## Future Improvements
 
