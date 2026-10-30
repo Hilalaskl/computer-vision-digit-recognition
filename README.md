@@ -46,6 +46,18 @@ The model uses the Adam optimizer and sparse categorical cross-entropy loss.
 
 The model successfully recognized the handwritten number `13` in a custom image.
 
+### Handwritten Number Recognition: 24
+
+**Example input image:**
+
+![Handwritten Number 24](24.jpg)
+
+**Recognized number:** `24`
+
+The model successfully detected and classified both handwritten digits in the image.
+
+### 3×3 Matrix Recognition
+
 The project was also tested with a handwritten 3×3 matrix. All nine digits were correctly recognized.
 
 **Matrix recognition example:**
@@ -71,6 +83,7 @@ computer-vision-digit-recognition/
 ├── README.md
 ├── .gitignore
 ├── 13.jpg
+├── 24.jpg
 ├── matris.jpg
 └── confusion_matrix.png
 ```
